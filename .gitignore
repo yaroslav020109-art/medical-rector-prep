@@ -32,9 +32,17 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# local SQLite database (legacy; replaced by Vercel KV)
+/.data/
+
+# local test artifacts
+/screenshots/
+/test-plan.md
 
 # typescript
 *.tsbuildinfo
