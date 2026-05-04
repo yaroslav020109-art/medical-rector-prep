@@ -1,5 +1,8 @@
-import fs from "node:fs";
-import path from "node:path";
+// Import the question bank statically so Next.js bundles it with the server
+// build. This works in every runtime (node, edge, serverless) and avoids
+// fs.readFileSync, which is unreliable on Vercel because `process.cwd()` in a
+// serverless function does not point at the repo root.
+import questionsJson from "../../data/questions.json";
 
 export interface QuestionOption {
   letter: string;
@@ -30,14 +33,8 @@ export interface CourseData {
   subjects: Subject[];
 }
 
-let cached: CourseData | null = null;
-
 export function getCourseData(): CourseData {
-  if (cached) return cached;
-  const file = path.join(process.cwd(), "data", "questions.json");
-  const raw = fs.readFileSync(file, "utf8");
-  cached = JSON.parse(raw) as CourseData;
-  return cached;
+  return questionsJson as CourseData;
 }
 
 export function getSubject(key: string): Subject | null {
