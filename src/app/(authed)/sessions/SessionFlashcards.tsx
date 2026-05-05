@@ -196,19 +196,17 @@ export default function SessionFlashcards({
         <p className="mt-3 text-lg font-semibold leading-snug">
           {card.question}
         </p>
-        {revealed ? (
+        {card.answer.length === 0 ? (
+          <p className="mt-3 text-xs italic text-zinc-500 dark:text-zinc-400">
+            Відповідь у самому формулюванні питання — самоперевірка.
+          </p>
+        ) : revealed ? (
           <div className="mt-4 rounded-md bg-zinc-50 p-4 text-sm dark:bg-zinc-950/50">
-            {card.answer.length > 0 ? (
-              <ul className="list-disc space-y-1 pl-5">
-                {card.answer.map((a, ai) => (
-                  <li key={ai}>{a}</li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-zinc-500 dark:text-zinc-400">
-                (Відповідь у самому формулюванні питання вище.)
-              </p>
-            )}
+            <ul className="list-disc space-y-1 pl-5">
+              {card.answer.map((a, ai) => (
+                <li key={ai}>{a}</li>
+              ))}
+            </ul>
           </div>
         ) : (
           <button
@@ -221,7 +219,7 @@ export default function SessionFlashcards({
         )}
       </div>
 
-      {revealed && (
+      {(revealed || card.answer.length === 0) && (
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
