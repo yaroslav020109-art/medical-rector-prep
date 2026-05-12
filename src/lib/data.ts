@@ -22,24 +22,60 @@ export interface SubjectSection {
   questions: Question[];
 }
 
+export interface Course {
+  key: string;
+  name: string;
+}
+
 export interface Subject {
   key: string;
   name: string;
+  courseKey: string;
   sections: SubjectSection[];
 }
 
 export interface CourseData {
-  course: { key: string; name: string };
+  /** Ordered list of courses present in the data. */
+  courses: Course[];
+  /** Back-compat: legacy single-course field. Equal to `courses[0]`. */
+  course: Course;
   subjects: Subject[];
 }
 
+interface RawCourseData {
+  courses?: Course[];
+  course?: Course;
+  subjects: Array<Omit<Subject, "courseKey"> & { courseKey?: string }>;
+}
+
+function normalize(raw: RawCourseData): CourseData {
+  const courses: Course[] =
+    raw.courses ??
+    (raw.course
+      ? [raw.course]
+      : [{ key: "course-1", name: "Ректорський контроль" }]);
+  const defaultCourseKey = courses[0]?.key ?? "course-1";
+  const subjects: Subject[] = raw.subjects.map((s) => ({
+    key: s.key,
+    name: s.name,
+    courseKey: s.courseKey ?? defaultCourseKey,
+    sections: s.sections,
+  }));
+  return {
+    courses,
+    course: raw.course ?? courses[0],
+    subjects,
+  };
+}
+
+const courseData: CourseData = normalize(questionsJson as RawCourseData);
+
 export function getCourseData(): CourseData {
-  return questionsJson as CourseData;
+  return courseData;
 }
 
 export function getSubject(key: string): Subject | null {
-  const data = getCourseData();
-  return data.subjects.find((s) => s.key === key) ?? null;
+  return courseData.subjects.find((s) => s.key === key) ?? null;
 }
 
 export function getAllQuestions(subjectKey: string): Question[] {
@@ -48,13 +84,29 @@ export function getAllQuestions(subjectKey: string): Question[] {
   return subject.sections.flatMap((s) => s.questions);
 }
 
-export function getSubjectSummary() {
-  const data = getCourseData();
+export interface SubjectSummaryItem {
+  key: string;
+  name: string;
+  courseKey: string;
+  questionCount: number;
+  sections: { name: string; questionCount: number }[];
+}
+
+export interface CourseSummary {
+  courses: Course[];
+  /** Back-compat alias for the first course. */
+  course: Course;
+  subjects: SubjectSummaryItem[];
+}
+
+export function getSubjectSummary(): CourseSummary {
   return {
-    course: data.course,
-    subjects: data.subjects.map((s) => ({
+    courses: courseData.courses,
+    course: courseData.course,
+    subjects: courseData.subjects.map((s) => ({
       key: s.key,
       name: s.name,
+      courseKey: s.courseKey,
       questionCount: s.sections.reduce((acc, sec) => acc + sec.questions.length, 0),
       sections: s.sections.map((sec) => ({
         name: sec.name,

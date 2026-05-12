@@ -29,6 +29,10 @@ export default function LoginForm() {
           }
           if (kind === "site_locked") {
             setErr("Сайт тимчасово закрито автором.");
+          } else if (kind === "device_mismatch") {
+            setErr(
+              "Цей код уже використано на іншому пристрої. Зверніться до автора, щоб звільнити прив'язку.",
+            );
           } else {
             setErr("Помилка входу. Спробуйте ще раз.");
           }

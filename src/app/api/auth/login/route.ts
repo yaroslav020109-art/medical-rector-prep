@@ -7,6 +7,11 @@ import {
   SESSION_COOKIE,
   SESSION_MAX_AGE,
 } from "@/lib/session";
+import {
+  getOrCreateDeviceId,
+  setDeviceIdCookie,
+} from "@/lib/device";
+import { validateAndBind } from "@/lib/device-codes";
 import { getSessionEpoch, getSiteLocked, upsertDeviceAndCount } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -23,13 +28,42 @@ export async function POST(request: NextRequest) {
   if (typeof code !== "string" || code.length === 0) {
     return NextResponse.json({ error: "missing_code" }, { status: 400 });
   }
-  if (!verifyCode(code, getUserCodeHash())) {
+
+  // Resolve / mint the persistent device identifier first so we can use it
+  // both for analytics and for device-bound code validation, and so we can
+  // refresh its cookie no matter which code branch wins.
+  const { deviceId, isNew: deviceIsNew } = getOrCreateDeviceId(request);
+  const fingerprint = deviceFingerprint(request);
+
+  const role = "user" as const;
+  let issueSession = false;
+
+  if (verifyCode(code, getUserCodeHash())) {
+    // Legacy global user code — works on any device.
+    issueSession = true;
+  } else {
+    // Try device-bound code path.
+    const result = await validateAndBind(code, deviceId);
+    if (result.status === "ok") {
+      issueSession = true;
+    } else if (result.status === "device_mismatch") {
+      return NextResponse.json(
+        { error: "device_mismatch" },
+        { status: 403 },
+      );
+    } else {
+      return NextResponse.json({ error: "invalid_code" }, { status: 401 });
+    }
+  }
+
+  if (!issueSession) {
+    // Shouldn't happen given the branches above, but be defensive.
     return NextResponse.json({ error: "invalid_code" }, { status: 401 });
   }
-  const fingerprint = deviceFingerprint(request);
+
   await upsertDeviceAndCount(fingerprint);
   const token = signSession({
-    role: "user",
+    role,
     device: fingerprint,
     epoch: await getSessionEpoch(),
     issued: Date.now(),
@@ -42,5 +76,10 @@ export async function POST(request: NextRequest) {
     path: "/",
     maxAge: SESSION_MAX_AGE,
   });
+  // Refresh (or first-time set) the persistent device_id cookie so future
+  // logins keep the same binding even if the original cookie was nearing
+  // expiry.
+  void deviceIsNew; // (kept for readability; not used further)
+  setDeviceIdCookie(res, deviceId);
   return res;
 }

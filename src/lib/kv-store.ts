@@ -34,6 +34,14 @@ export async function setKV(key: string, value: string): Promise<void> {
   memSettings.set(key, value);
 }
 
+export async function delKV(key: string): Promise<void> {
+  if (useKV) {
+    await kv.del(key);
+    return;
+  }
+  memSettings.delete(key);
+}
+
 export async function addToSet(
   setKey: string,
   member: string,
@@ -53,10 +61,45 @@ export async function addToSet(
   return { added: set.size > before, size: set.size };
 }
 
+export async function removeFromSet(
+  setKey: string,
+  member: string,
+): Promise<void> {
+  if (useKV) {
+    await kv.srem(setKey, member);
+    return;
+  }
+  memSets.get(setKey)?.delete(member);
+}
+
+export async function getSetMembers(setKey: string): Promise<string[]> {
+  if (useKV) {
+    const members = await kv.smembers(setKey);
+    return Array.isArray(members) ? members.map(String) : [];
+  }
+  return Array.from(memSets.get(setKey) ?? []);
+}
+
 export async function setSize(setKey: string): Promise<number> {
   if (useKV) {
     const n = await kv.scard(setKey);
     return Number(n);
   }
   return (memSets.get(setKey) ?? new Set()).size;
+}
+
+// ---------- JSON helpers ----------
+
+export async function getJSON<T>(key: string): Promise<T | null> {
+  const raw = await getKV(key);
+  if (raw == null) return null;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+}
+
+export async function setJSON<T>(key: string, value: T): Promise<void> {
+  await setKV(key, JSON.stringify(value));
 }
