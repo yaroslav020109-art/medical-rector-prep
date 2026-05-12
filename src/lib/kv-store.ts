@@ -89,9 +89,24 @@ export async function setSize(setKey: string): Promise<number> {
 }
 
 // ---------- JSON helpers ----------
+//
+// Note on @vercel/kv quirk: `kv.get(key)` auto-parses values that *look* like
+// JSON. So if we `kv.set(key, JSON.stringify(obj))`, a later `kv.get` will
+// return `obj` (already parsed), NOT the JSON string. The previous version of
+// these helpers re-fetched via the string-typed `getKV` wrapper and tried to
+// `JSON.parse` the result — that double-parse blew up on production KV (but
+// not on the in-memory dev stub, which preserves the raw string). We now
+// bypass the string wrapper in production and trust the SDK's auto-parse.
 
 export async function getJSON<T>(key: string): Promise<T | null> {
-  const raw = await getKV(key);
+  if (useKV) {
+    const v = await kv.get<T>(key);
+    // The SDK returns the original type (object, string, number, ...). We
+    // only support object/value payloads stored via setJSON, so just hand
+    // back what we got.
+    return v == null ? null : (v as T);
+  }
+  const raw = memSettings.get(key);
   if (raw == null) return null;
   try {
     return JSON.parse(raw) as T;
@@ -101,5 +116,12 @@ export async function getJSON<T>(key: string): Promise<T | null> {
 }
 
 export async function setJSON<T>(key: string, value: T): Promise<void> {
-  await setKV(key, JSON.stringify(value));
+  if (useKV) {
+    // Pass the raw object: the SDK serializes it. (Passing JSON.stringify-ed
+    // values also works because the SDK still auto-parses on read, but it's
+    // clearer to pass the original object so the round-trip type matches.)
+    await kv.set(key, value as unknown as string);
+    return;
+  }
+  memSettings.set(key, JSON.stringify(value));
 }
