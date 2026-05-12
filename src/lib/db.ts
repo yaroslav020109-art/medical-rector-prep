@@ -1,4 +1,4 @@
-import { addToSet, getKV, setKV, setSize } from "./kv-store";
+import { addToSet, deleteSet, getKV, setKV, setSize } from "./kv-store";
 
 const SETTING_PREFIX = "settings:";
 const DEVICES_SET = "devices:fingerprints";
@@ -22,6 +22,10 @@ export async function upsertDeviceAndCount(
 
 export async function countDevices(): Promise<number> {
   return setSize(DEVICES_SET);
+}
+
+export async function resetDevices(): Promise<void> {
+  await deleteSet(DEVICES_SET);
 }
 
 export async function bumpSessionEpoch(): Promise<string> {

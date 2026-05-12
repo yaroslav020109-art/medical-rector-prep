@@ -4,6 +4,7 @@ import { readSession } from "@/lib/session";
 import { countDevices, getSessionEpoch, getSiteLocked } from "@/lib/db";
 import { listCodes } from "@/lib/device-codes";
 import AdminControls from "./AdminControls";
+import DeviceCounterReset from "./DeviceCounterReset";
 
 export default async function AdminPage() {
   const s = await readSession();
@@ -34,6 +35,7 @@ export default async function AdminPage() {
           (один пристрій рахується один раз; визначається за відбитком user-agent
           / IP)
         </p>
+        <DeviceCounterReset initialTotal={total} />
       </section>
 
       <section className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
