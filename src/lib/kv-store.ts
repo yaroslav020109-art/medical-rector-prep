@@ -88,6 +88,14 @@ export async function setSize(setKey: string): Promise<number> {
   return (memSets.get(setKey) ?? new Set()).size;
 }
 
+export async function deleteSet(setKey: string): Promise<void> {
+  if (useKV) {
+    await kv.del(setKey);
+    return;
+  }
+  memSets.delete(setKey);
+}
+
 // ---------- JSON helpers ----------
 //
 // Note on @vercel/kv quirk: `kv.get(key)` auto-parses values that *look* like

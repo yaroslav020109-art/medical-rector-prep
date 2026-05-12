@@ -15,6 +15,11 @@ interface ServedQuestion {
   options: ServedOption[];
   /** present only in training mode so the client can show feedback immediately */
   correctLetter?: string;
+  /** 1-based position in the canonical "all questions" list for this subject
+   *  — matches the order shown on /subject/[key]/questions and lets the user
+   *  cross-reference a question they saw in shuffled mode back to the
+   *  reference list. */
+  masterNumber: number;
 }
 
 function shuffleOptions(q: Question): { options: ServedOption[]; correctLetter: string } {
@@ -46,12 +51,24 @@ export async function GET(
       1,
       Math.min(Number(limitParam) || all.length, all.length),
     );
+    // id → 1-based position in the canonical, stable order of all questions
+    // for this subject. Same order as /subject/[key]/questions, so the badge
+    // we send to the client lets the user click through to the reference
+    // list entry.
+    const masterIndex = new Map<string, number>();
+    all.forEach((q, i) => masterIndex.set(q.id, i + 1));
+
     const sampled = shuffleArray(all).slice(0, limit);
     const answerKey: Record<string, string> = {};
     const served: ServedQuestion[] = sampled.map((q) => {
       const { options, correctLetter } = shuffleOptions(q);
       answerKey[q.id] = correctLetter;
-      const out: ServedQuestion = { id: q.id, text: q.text, options };
+      const out: ServedQuestion = {
+        id: q.id,
+        text: q.text,
+        options,
+        masterNumber: masterIndex.get(q.id) ?? 0,
+      };
       if (mode === "training") {
         out.correctLetter = correctLetter;
       }

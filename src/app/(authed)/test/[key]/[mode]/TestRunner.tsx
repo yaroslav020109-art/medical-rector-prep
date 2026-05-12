@@ -8,6 +8,8 @@ interface ServedQuestion {
   text: string;
   options: { letter: string; text: string }[];
   correctLetter?: string;
+  /** 1-based position in the master list on /subject/[key]/questions */
+  masterNumber: number;
 }
 
 interface FetchResult {
@@ -210,9 +212,21 @@ export default function TestRunner({
                 key={q.id}
                 className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
               >
-                <p className="text-xs uppercase tracking-wide text-zinc-400">
-                  №{i + 1}
-                </p>
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="text-xs uppercase tracking-wide text-zinc-400">
+                    №{i + 1}
+                  </p>
+                  {q.masterNumber > 0 && (
+                    <Link
+                      href={`/subject/${subjectKey}/questions#${q.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full bg-zinc-100 px-2 py-0.5 font-mono text-[11px] font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                    >
+                      №{q.masterNumber} у переліку
+                    </Link>
+                  )}
+                </div>
                 <p className="mt-1 text-sm leading-relaxed">{q.text}</p>
                 <ul className="mt-3 space-y-1.5">
                   {q.options.map((o) => {
@@ -270,9 +284,22 @@ export default function TestRunner({
       </div>
 
       <article className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-xs uppercase tracking-wide text-zinc-400">
-          Запитання {idx + 1}
-        </p>
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-xs uppercase tracking-wide text-zinc-400">
+            Запитання {idx + 1}
+          </p>
+          {current.masterNumber > 0 && (
+            <Link
+              href={`/subject/${subjectKey}/questions#${current.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Відкрити це запитання у переліку всіх питань (нова вкладка)"
+              className="rounded-full bg-zinc-100 px-2.5 py-0.5 font-mono text-xs font-medium text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
+              №{current.masterNumber} у переліку
+            </Link>
+          )}
+        </div>
         <p className="mt-2 text-base leading-relaxed text-zinc-900 dark:text-zinc-100">
           {current.text}
         </p>

@@ -26,7 +26,7 @@ export default async function SubjectPage({
         Усього {total} запитань. Виберіть режим:
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Link
           href={`/test/${subject.key}/training`}
           className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
@@ -51,6 +51,19 @@ export default async function SubjectPage({
           </p>
           <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
             Розпочати іспит →
+          </p>
+        </Link>
+        <Link
+          href={`/subject/${subject.key}/questions`}
+          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+        >
+          <h2 className="text-lg font-semibold">Перелік питань</h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Усі {total} запитань списком, з правильними відповідями. Довідковий
+            режим — для повторення без таймера й випадкового порядку.
+          </p>
+          <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            Відкрити перелік →
           </p>
         </Link>
       </div>
