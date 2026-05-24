@@ -67,6 +67,21 @@ export default async function SubjectPage({
           .
         </p>
       </div>
+
+      <Link
+        href={`/subject/${subject.key}/list`}
+        className="mt-4 flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+      >
+        <div>
+          <h2 className="text-lg font-semibold">Перелік питань</h2>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Переглянути всі {total} запитань з правильними відповідями.
+          </p>
+          <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            Переглянути →
+          </p>
+        </div>
+      </Link>
     </main>
   );
 }
