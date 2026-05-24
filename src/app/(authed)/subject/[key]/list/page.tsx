@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getSubject } from "@/lib/data";
 
-export default async function SubjectPage({
+export default async function QuestionListPage({
   params,
 }: {
   params: Promise<{ key: string }>;
@@ -10,78 +10,63 @@ export default async function SubjectPage({
   const { key } = await params;
   const subject = getSubject(key);
   if (!subject) notFound();
-  const total = subject.sections.reduce((acc, s) => acc + s.questions.length, 0);
-  const examLimit = Math.min(50, total);
+
+  const allQuestions = subject.sections.flatMap((s) => s.questions);
+  const total = allQuestions.length;
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <Link
-        href="/catalog"
+        href={`/subject/${key}`}
         className="text-sm text-zinc-500 hover:underline dark:text-zinc-400"
       >
-        ← До каталогу
+        ← {subject.name}
       </Link>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">{subject.name}</h1>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        Перелік питань — {subject.name}
+      </h1>
       <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-        Усього {total} запитань. Виберіть режим:
+        Усього {total} запитань
       </p>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Link
-          href={`/test/${subject.key}/training`}
-          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-        >
-          <h2 className="text-lg font-semibold">Тренування</h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Ви бачите правильну відповідь одразу після вибору. Без обмеження часу.
-            Запитання та варіанти перемішуються.
-          </p>
-          <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            Розпочати тренування →
-          </p>
-        </Link>
-        <Link
-          href={`/test/${subject.key}/exam?limit=${examLimit}`}
-          className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-        >
-          <h2 className="text-lg font-semibold">Іспит</h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {examLimit} випадкових запитань. Правильні відповіді показуються лише
-            після завершення.
-          </p>
-          <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            Розпочати іспит →
-          </p>
-        </Link>
-      </div>
-
-      <div className="mt-6 text-sm text-zinc-500 dark:text-zinc-400">
-        <p>
-          Хочете іспит з усіх {total} запитань? Натисніть{" "}
-          <Link
-            className="font-medium text-zinc-900 underline dark:text-zinc-100"
-            href={`/test/${subject.key}/exam?limit=${total}`}
+      <ol className="mt-6 space-y-4">
+        {allQuestions.map((q, i) => (
+          <li
+            key={q.id}
+            className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
           >
-            тут
-          </Link>
-          .
-        </p>
-      </div>
-
-      <Link
-        href={`/subject/${subject.key}/list`}
-        className="mt-4 flex items-center gap-2 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition hover:border-zinc-300 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
-      >
-        <div>
-          <h2 className="text-lg font-semibold">Перелік питань</h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Переглянути всі {total} запитань з правильними відповідями.
-          </p>
-          <p className="mt-3 text-sm font-medium text-zinc-900 dark:text-zinc-100">
-            Переглянути →
-          </p>
-        </div>
-      </Link>
+            <p className="text-xs uppercase tracking-wide text-zinc-400">
+              № {i + 1}
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-zinc-900 dark:text-zinc-100">
+              {q.text}
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              {q.options.map((o) => {
+                const isCorrect = o.letter === q.correctLetter;
+                return (
+                  <li
+                    key={o.letter}
+                    className={`flex items-start gap-2 rounded-md border px-2.5 py-1.5 text-sm ${
+                      isCorrect
+                        ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+                        : "border-zinc-200 dark:border-zinc-800"
+                    }`}
+                  >
+                    <span className="font-mono font-semibold">{o.letter}.</span>
+                    <span>{o.text}</span>
+                    {isCorrect && (
+                      <span className="ml-auto text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                        ✓ правильна
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </li>
+        ))}
+      </ol>
     </main>
   );
 }
