@@ -270,9 +270,14 @@ export default function TestRunner({
       </div>
 
       <article className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <p className="text-xs uppercase tracking-wide text-zinc-400">
-          Запитання {idx + 1}
-        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-xs uppercase tracking-wide text-zinc-400">
+            Запитання {idx + 1}
+          </p>
+          <span className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+            № {idx + 1} з {data.total}
+          </span>
+        </div>
         <p className="mt-2 text-base leading-relaxed text-zinc-900 dark:text-zinc-100">
           {current.text}
         </p>
